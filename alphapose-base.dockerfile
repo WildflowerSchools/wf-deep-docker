@@ -1,4 +1,4 @@
-FROM wildflowerschools/wf-deep-docker:pytorch-base-v3
+FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v2
 
 RUN apt update && \
         apt install -y build-essential \
@@ -8,11 +8,9 @@ RUN apt update && \
         git && \
     pip3 install --upgrade pip setuptools build-utils
 
-RUN DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib
+RUN DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib python-libsmdev libsm-dev
 
 RUN pip3 install Cython
-
-RUN mkdir /build
 
 RUN cd /build && git clone https://github.com/MVIG-SJTU/AlphaPose.git
 
