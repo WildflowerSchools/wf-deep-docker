@@ -10,7 +10,7 @@ mkdir -p detector/tracker/data
 mkdir -p pretrained_models/
 
 curl https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/yolov3-spp.weights > detector/yolo/data/yolov3-spp.weights
-curl https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/JDE-1088x608-uncertainty.pt > detector/tracker/data/JDE-1088x608-uncertainty.pt
+curl https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/jde.1088x608.uncertainty.pt > jde.1088x608.uncertainty.pt
 curl https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/fast_res50_256x192.pth > pretrained_models/fast_res50_256x192.pth
 curl https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/256x192_res50_lr1e-3_1x.yaml > pretrained_models/256x192_res50_lr1e-3_1x.yaml
 

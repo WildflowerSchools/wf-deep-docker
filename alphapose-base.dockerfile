@@ -12,7 +12,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib python-libs
 
 RUN pip3 install Cython
 
-RUN cd /build && git clone https://github.com/MVIG-SJTU/AlphaPose.git
+RUN cd /build && git clone https://github.com/WildflowerSchools/AlphaPose.git
 
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3
 
