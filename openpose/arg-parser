@@ -1,0 +1,43 @@
+#!/usr/local/bin/bash
+
+if [ ! -n "$FLAG_KWARGS"]; then
+    FLAG_KWARGS=""
+fi
+
+declare -a ARGS
+declare -A KWARGS
+
+while (( "$#" )); do
+  case "$1" in
+    -*|--*)
+      KEY=${1##*-}
+      if [[ "$FLAG_KWARGS" =~ "|${KEY}|" ]]; then
+          KWARGS["$KEY"]="true"
+          shift 1
+      else
+          if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+            KWARGS["$KEY"]="$2"
+            shift 2
+          else
+            KWARGS["$KEY"]="true"
+            shift 1
+          fi
+      fi
+      ;;
+    *) # preserve positional arguments
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+# echo "=============="
+# echo " ARGS found ${#ARGS[*]}"
+# echo "${ARGS[@]}"
+# echo "=============="
+# echo " KWARGS found ${#KWARGS[@]}"
+# for k in "${!KWARGS[@]}"
+# do
+#   printf "%s\n" "$k=${KWARGS[$k]}"
+# done
+# echo "=============="
