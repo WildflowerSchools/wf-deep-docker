@@ -16,4 +16,7 @@ RUN wget https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphap
     ./darknet partial ./cfg/yolov4.cfg yolov4.weights ./build/darknet/x64/yolov4-pretrained.conv.161 161 && \
     rm yolov3-spp.weights && rm yolov4.weights
 
-RUN apt install -y vim
+COPY darknet/entrypoint.sh /usr/local/bin/
+ENV PATH=/usr/local/bin:${PATH}
+
+ENTRYPOINT ["entrypoint.sh"]
