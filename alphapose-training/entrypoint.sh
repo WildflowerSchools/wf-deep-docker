@@ -121,7 +121,7 @@ img_height=$(printf "%.0f\n" $(echo "${img_width}*.75" | bc))
 heatmap_width=$(printf "%.0f\n" $(echo "${img_width}*.25" | bc))
 heatmap_height=$(printf "%.0f\n" $(echo "${img_height}*.25" | bc))
 
-if [ ${DATASET_TYPE} == "wfcoco17" ]; then
+if [ "v${DATASET_TYPE}" == "vwfcoco17" ]; then
    alphapose_dataset_type="Wfcoco17" 
    alphapose_dataset_type_det="Wfcoco17_det"
 else
@@ -147,9 +147,10 @@ else
     exit 1
 fi
 
+detector_type="yolov3"
 detector_config_dir="/build/AlphaPose/data/cfgs"
 detector_weights_dir="build/AlphaPose/data/weights"
-if [ ${DETECTOR} == "wfyolov3" ]; then
+if [ "v${DETECTOR}" == "vwfyolov3" ]; then
     detector_config_filename="${DETECTOR_YOLOV3_WF_CONFIG_URL##*/}"
     detector_config="${detector_config_dir}/${detector_config_filename}"
     if [ ! -f ${detector_config} ]; then
@@ -169,7 +170,7 @@ else
 fi
 
 pretrained_dir="/build/AlphaPose/pretrained_models"
-if [ ${PRETRAINED} == "fast_421_res152_256x192.pth" ]; then
+if [ "v${PRETRAINED}" == "vfast_421_res152_256x192.pth" ]; then
     pretrained="${pretrained_dir}/${PRETRAINED}"   
     if [ ! -f ${pretrained} ]; then
       echo "Downloading ${PRETRAINED_FAST_421_RES152_256x192}..."
@@ -233,5 +234,5 @@ sed -i -E "s/\{DET_FILE_DIR\}/$(regexSafe "/build/AlphaPose/exp/det_results")/g"
 sed -i -E "s/\{PRETRAINED\}/$(regexSafe ${pretrained})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{EPOCHS\}/${EPOCHS}/g" "${alphapose_cfg_path}"
 
-python3 scripts/train.py --detector yolov3 --cfg ${alphapose_cfg_path} --exp-id wf_res152_256x192
+python3 scripts/train.py --detector ${detector_type} --cfg ${alphapose_cfg_path} --exp-id wf_res152_${img_width}x${img_height}_$(date +%m-%d-%yT%T)
 
