@@ -28,6 +28,7 @@ IMG_SIZE=256 # Specifically width, image aspect ratio converted to 4:3
 BATCH_SIZE=32
 PRETRAINED=""
 EPOCHS=3500
+NUM_CLASSES=80
 while (( "$#" )); do
   case "$1" in
     --detector)
@@ -91,6 +92,15 @@ while (( "$#" )); do
       else
         echo "Error: Argument for $1 is missing" >&2
        	exit 1
+      fi
+      ;;
+    --num-classes)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        NUM_CLASSES=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
       fi
       ;;
     -*|--*=) # unsupported flags
@@ -233,6 +243,6 @@ sed -i -E "s/\{DETECTOR_WEIGHTS\}/$(regexSafe ${detector_weights})/g" "${alphapo
 sed -i -E "s/\{DET_FILE_DIR\}/$(regexSafe "/build/AlphaPose/exp/det_results")/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{PRETRAINED\}/$(regexSafe ${pretrained})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{EPOCHS\}/${EPOCHS}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{NUM_CLASSES\}/${NUM_CLASSES}/g" "${alphapose_cfg_path}"
 
 python3 scripts/train.py --detector ${detector_type} --cfg ${alphapose_cfg_path} --exp-id wf_res152_${img_width}x${img_height}_$(date +%m-%d-%yT%T)
-

@@ -6,6 +6,7 @@ DATASET_TYPE="wfcoco17"
 CONFIG=""
 MODEL=""
 COCO_DIR=""
+EVAL_TYPE="keypoints"
 while (( "$#" )); do
   case "$1" in
     --detector-type)
@@ -53,6 +54,15 @@ while (( "$#" )); do
         exit 1
       fi
       ;;
+    --eval-type)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        EVAL_TYPE=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
     -*|--*=) # unsupported flags
       echo "Error: Unsupported flag $1" >&2
       exit 1
@@ -84,7 +94,7 @@ if ! pip show natsort &> /dev/null; then
 fi
 
 if pip show pycocotools &> /dev/null; then
-  pip uninstall pycocotools
+  pip uninstall pycocotools -y
 fi
 
 image_dir="${COCO_DIR}/images"
@@ -97,6 +107,13 @@ python scripts/demo_inference.py \
   --detector ${DETECTOR_TYPE} \
   --sp
 
+result="$?"
+if [ "$result" -ne 0 ]; then
+    echo "Inference failed"
+    exit 1
+fi
+
 python3 scripts/evaluate.py \
   --coco-data-type ${DATASET_TYPE} \
-  --coco-data-dir ${COCO_DIR}
+  --coco-data-dir ${COCO_DIR} \
+  --eval-type ${EVAL_TYPE}

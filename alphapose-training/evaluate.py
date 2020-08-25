@@ -17,11 +17,15 @@ def parse():
                         type=str,
                         required=True,
                         help='COCO Data folder')
+    parser.add_argument('--eval-type',
+                        type=str,
+                        required=True,
+                        help='Valid options include keypoints | bbox' )
 
     return parser.parse_args()
 
 
-def evaluate(coco_data_type, coco_data_dir):
+def evaluate(coco_data_type, coco_data_dir, eval_type):
     homeDir='/build/AlphaPose'
 
     cocoFileName='wf-val.json'
@@ -33,8 +37,6 @@ def evaluate(coco_data_type, coco_data_dir):
 
     annFile='{}/{}'.format(coco_data_dir, cocoFileName)
     resFile='{}/{}'.format(resDir, resFileName)
-
-    evalType = "keypoints"  #bbox
 
     cocoGt = COCO(annFile)
 
@@ -68,7 +70,7 @@ def evaluate(coco_data_type, coco_data_dir):
     print("Number annotations matched with ann file: %d" % len(cocoValidResults))
     cocoDt = cocoGt.loadRes(cocoValidResults)
 
-    cocoEval = COCOeval(cocoGt, cocoDt, evalType)
+    cocoEval = COCOeval(cocoGt, cocoDt, eval_type)
     cocoEval.params.catIds = [1]
     cocoEval.params.imgIds = eval_image_ids
     cocoEval.evaluate()
@@ -86,4 +88,4 @@ def evaluate(coco_data_type, coco_data_dir):
 
 if __name__ == "__main__":
     cfg = parse()
-    evaluate(cfg.coco_data_type, cfg.coco_data_dir)
+    evaluate(cfg.coco_data_type, cfg.coco_data_dir, cfg.eval_type)
