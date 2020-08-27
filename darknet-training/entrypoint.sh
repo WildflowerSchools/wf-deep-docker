@@ -5,6 +5,7 @@ set -e
 PARAMS=""
 YOLO_VERSION=""
 COCO_S3_URL=""
+COCO_NAMES_URL="https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/darknet/coco.names"
 GPUS=0
 SUBDIVISIONS=64
 IMG_SIZE=832
@@ -29,6 +30,15 @@ while (( "$#" )); do
         exit 1
       fi
       ;;
+    --coco-names-url)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        COCO_NAMES_URL=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;       
     --gpus)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
         GPUS=$2
@@ -107,20 +117,21 @@ if [ "v${COCO_S3_URL}" != 'v' ]; then
   filename_with_extension="${COCO_S3_URL##*/}"
   filename_naked="${filename_with_extension%.tar.gz}"
 
-  if [ ! -f "/build/wf-coco-to-yolo/${filename_with_extension}" ]; then
+  if [ ! -f "/build/darknet/data/coco/${filename_with_extension}" ]; then
     echo "Downloading ${filename_with_extension}..."
-    python /build/darknet/scripts/s3_download.py --s3-file-url ${COCO_S3_URL} --dest /build/wf-coco-to-yolo
+    python /build/darknet/scripts/s3_download.py --s3-file-url ${COCO_S3_URL} --dest /build/darknet/data/coco
   fi
 
-  if [ ! -d "/build/wf-coco-to-yolo/${filename_naked}" ]; then
-    tar -xvf "/build/wf-coco-to-yolo/${filename_with_extension}" -C /build/wf-coco-to-yolo
+  if [ ! -d "/build/darknet/data/coco/${filename_naked}" ]; then
+    tar -xvf "/build/darknet/data/coco/${filename_with_extension}" -C /build/darknet/data/coco/
   fi
 
   mkdir -p /build/wf-coco-to-yolo/data
   rm -rf /build/wf-coco-to-yolo/data/*
-  cp -a /build/wf-coco-to-yolo/${filename_naked}/. /build/wf-coco-to-yolo/data/
+  cp -a /build/darknet/data/coco/${filename_naked}/. /build/wf-coco-to-yolo/data/
 
-  /build/wf-coco-to-yolo/convert.sh
+  /build/wf-coco-to-yolo/convert.sh --coco-names-url ${COCO_NAMES_URL}
+
   mkdir -p /build/darknet/data/wf/
   rm -rf /build/darknet/data/wf/*
   mv /build/wf-coco-to-yolo/output/wf/* /build/darknet/data/wf/
