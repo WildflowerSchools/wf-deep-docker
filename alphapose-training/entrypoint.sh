@@ -27,7 +27,8 @@ DATASET_URL=""
 IMG_SIZE=256 # Specifically width, image aspect ratio converted to 4:3
 BATCH_SIZE=32
 PRETRAINED=""
-EPOCHS=3500
+LEARNING_RATE="0.001"
+EPOCHS=200
 NUM_CLASSES=80
 while (( "$#" )); do
   case "$1" in
@@ -79,6 +80,15 @@ while (( "$#" )); do
     --pretrained)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
         PRETRAINED=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+       	exit 1
+      fi
+      ;; 
+    --learning-rate)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        LEARNING_RATE=$2
         shift 2
       else
         echo "Error: Argument for $1 is missing" >&2
@@ -230,6 +240,13 @@ if [ ! -f "${dataset}/wf-val.json" ]; then
     exit 1
 fi
 
+# Compute Step Rate
+LR_STEP_1=$(printf "%.0f\n" $(echo "${EPOCHS}*.45" | bc))
+LR_STEP_2=$(printf "%.0f\n" $(echo "${EPOCHS}*.6" | bc))
+DPG_MILESTONE=$(printf "%.0f\n" $(echo "${EPOCHS}*.7" | bc))
+DPG_STEP_1=$(printf "%.0f\n" $(echo "${EPOCHS}*.8" | bc))
+DPG_STEP_2=$(printf "%.0f\n" $(echo "${EPOCHS}*.95" | bc))
+
 sed -i -E "s/\{ROOT\}/$(regexSafe ${dataset})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{TYPE\}/${alphapose_dataset_type}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{TYPE_DET\}/${alphapose_dataset_type_det}/g" "${alphapose_cfg_path}"
@@ -246,7 +263,13 @@ sed -i -E "s/\{DETECTOR_CONFIG\}/$(regexSafe ${detector_config})/g" "${alphapose
 sed -i -E "s/\{DETECTOR_WEIGHTS\}/$(regexSafe ${detector_weights})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{DET_FILE_DIR\}/$(regexSafe "${test_detector_dir}")/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{PRETRAINED\}/$(regexSafe ${pretrained})/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{LEARNING_RATE\}/${LEARNING_RATE}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{EPOCHS\}/${EPOCHS}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{LR_STEP_1\}/${LR_STEP_1}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{LR_STEP_2\}/${LR_STEP_2}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{DPG_MILESTONE\}/${DPG_MILESTONE}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{DPG_STEP_1\}/${DPG_STEP_1}/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{DPG_STEP_2\}/${DPG_STEP_2}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{NUM_CLASSES\}/${NUM_CLASSES}/g" "${alphapose_cfg_path}"
 
 python3 scripts/train.py --detector ${detector_type} --cfg ${alphapose_cfg_path} --exp-id wf_res152_${img_width}x${img_height}_$(date +%m-%d-%yT%T)
