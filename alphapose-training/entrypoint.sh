@@ -8,8 +8,8 @@ DETECTOR_YOLOV3_DARKNET_WEIGHTS_URL="s3://wildflower-tech-public/models/alphapos
 DETECTOR_YOLOV4_DARKNET_CONFIG_PATH="/build/AlphaPose/detector/yolo_v4/cfg/yolov4.cfg"
 DETECTOR_YOLOV4_DARKNET_WEIGHTS_URL="s3://wildflower-tech-public/models/alphapose/yolov4.weights"
 
-DETECTOR_YOLOV3_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.1.cfg"
-DETECTOR_YOLOV3_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.1.weights"
+DETECTOR_YOLOV3_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.2.cfg"
+DETECTOR_YOLOV3_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.2.weights"
 
 DETECTOR_YOLOV4_WF_CONFIG_URL=""
 DETECTOR_YOLOV4_WF_WEIGHTS_URL=""
@@ -157,6 +157,10 @@ else
     exit 1
 fi
 
+test_detector_dir="/build/AlphaPose/exp/det_results"
+mkdir -p ${test_detector_dir}
+rm -rf ${test_detector_dir}/*.json
+
 detector_type="yolov3"
 detector_config_dir="/build/AlphaPose/data/cfgs"
 detector_weights_dir="build/AlphaPose/data/weights"
@@ -240,7 +244,7 @@ sed -i -E "s/\{HEATMAP_HEIGHT\}/${heatmap_height}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{DETECTOR_NAME\}/${DETECTOR}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{DETECTOR_CONFIG\}/$(regexSafe ${detector_config})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{DETECTOR_WEIGHTS\}/$(regexSafe ${detector_weights})/g" "${alphapose_cfg_path}"
-sed -i -E "s/\{DET_FILE_DIR\}/$(regexSafe "/build/AlphaPose/exp/det_results")/g" "${alphapose_cfg_path}"
+sed -i -E "s/\{DET_FILE_DIR\}/$(regexSafe "${test_detector_dir}")/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{PRETRAINED\}/$(regexSafe ${pretrained})/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{EPOCHS\}/${EPOCHS}/g" "${alphapose_cfg_path}"
 sed -i -E "s/\{NUM_CLASSES\}/${NUM_CLASSES}/g" "${alphapose_cfg_path}"
