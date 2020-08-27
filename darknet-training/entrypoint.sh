@@ -3,12 +3,32 @@
 set -e
 
 PARAMS=""
+YOLO_VERSION=""
+COCO_S3_URL=""
 GPUS=0
 SUBDIVISIONS=64
 IMG_SIZE=832
 MAX_BATCHES=3500
 while (( "$#" )); do
   case "$1" in
+    --yolo)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        YOLO_VERSION=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
+    --coco-s3-url)
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+        COCO_S3_URL=$2
+        shift 2
+      else
+        echo "Error: Argument for $1 is missing" >&2
+        exit 1
+      fi
+      ;;
     --gpus)
       if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
         GPUS=$2
@@ -61,17 +81,52 @@ if ! command -v bc &> /dev/null; then
 fi
 
 PARAM_ARRAY=($PARAMS)
-YOLO_VERSION=${PARAM_ARRAY[0]}
 
-if [ "${YOLO_VERSION}" == 'yolov3' ]; then
+if [ "v${YOLO_VERSION}" == 'vyolov3' ]; then
   yolo_input="./cfg/yolov3-spp.train.cfg ./build/darknet/x64/yolov3-spp-pretrained.conv.113"
   yolo_cfg_name="yolov3-spp.train.cfg"
-elif [ "${YOLO_VERSION}" == 'yolov4' ]; then
+elif [ "v${YOLO_VERSION}" == 'vyolov4' ]; then
   yolo_input="./cfg/yolov4.cfg ./build/darknet/x64/yolov4-pretrained.conv.161"
   yolo_cfg_name="yolov4.cfg"
 else
   echo "Error: Arg1 should specify yolov3 | yolov4"
   exit 0
+fi
+
+if [ "v${COCO_S3_URL}" != 'v' ]; then
+  cd /build/wf-coco-to-yolo/
+  if [ ! -d "/build/wf-coco-to-yolo/venv" ]; then
+    python -m venv env
+    source env/bin/activate
+  fi
+
+  if ! pip show boto3 &> /dev/null; then
+    pip install boto3
+  fi
+
+  filename_with_extension="${COCO_S3_URL##*/}"
+  filename_naked="${filename_with_extension%.tar.gz}"
+
+  if [ ! -f "/build/wf-coco-to-yolo/${filename_with_extension}" ]; then
+    echo "Downloading ${filename_with_extension}..."
+    python /build/darknet/scripts/s3_download.py --s3-file-url ${COCO_S3_URL} --dest /build/wf-coco-to-yolo
+  fi
+
+  if [ ! -d "/build/wf-coco-to-yolo/${filename_naked}" ]; then
+    tar -xvf "/build/wf-coco-to-yolo/${filename_with_extension}" -C /build/wf-coco-to-yolo
+  fi
+
+  mkdir -p /build/wf-coco-to-yolo/data
+  rm -rf /build/wf-coco-to-yolo/data/*
+  cp -a /build/wf-coco-to-yolo/${filename_naked}/. /build/wf-coco-to-yolo/data/
+
+  /build/wf-coco-to-yolo/convert.sh
+  mkdir -p /build/darknet/data/wf/
+  rm -rf /build/darknet/data/wf/*
+  mv /build/wf-coco-to-yolo/output/wf/* /build/darknet/data/wf/
+
+  deactivate
+  cd /build/darknet
 fi
 
 yolo_cfg_path="./cfg/${yolo_cfg_name}"
