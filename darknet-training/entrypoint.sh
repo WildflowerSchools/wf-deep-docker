@@ -107,8 +107,8 @@ if [ "v${COCO_S3_URL}" != 'v' ]; then
   cd /build/wf-coco-to-yolo/
   if [ ! -d "/build/wf-coco-to-yolo/venv" ]; then
     python -m venv env
-    source env/bin/activate
   fi
+  source env/bin/activate
 
   if ! pip show boto3 &> /dev/null; then
     pip install boto3
