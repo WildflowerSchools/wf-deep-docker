@@ -11,8 +11,8 @@ DETECTOR_YOLOV4_DARKNET_WEIGHTS_URL="s3://wildflower-tech-public/models/alphapos
 DETECTOR_YOLOV3_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.2.cfg"
 DETECTOR_YOLOV3_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov3-spp.wf.0.2.weights"
 
-DETECTOR_YOLOV4_WF_CONFIG_URL=""
-DETECTOR_YOLOV4_WF_WEIGHTS_URL=""
+DETECTOR_YOLOV4_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/yolov4-spp.wf.0.2.cfg"
+DETECTOR_YOLOV4_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov4-spp.wf.0.2.weights"
 
 PRETRAINED_FAST_421_RES152_256x192="s3://wildflower-tech-public/models/alphapose/fast_421_res152_256x192.pth"
 
@@ -132,6 +132,10 @@ if ! pip show boto3 &> /dev/null; then
     pip3 install boto3
 fi
 
+if pip show pycocotools &> /dev/null; then
+  pip uninstall pycocotools -y
+fi
+
 alphapose_cfg_path="/build/AlphaPose/data/cfgs/wf_alphapose_config.yaml"
 cp /build/AlphaPose/configs/wf/train_template.yaml ${alphapose_cfg_path}
 
@@ -171,26 +175,31 @@ test_detector_dir="/build/AlphaPose/exp/det_results"
 mkdir -p ${test_detector_dir}
 rm -rf ${test_detector_dir}/*.json
 
-detector_type="yolov3"
 detector_config_dir="/build/AlphaPose/data/cfgs"
 detector_weights_dir="build/AlphaPose/data/weights"
 if [ "v${DETECTOR}" == "vwfyolov3" ]; then
     detector_config_filename="${DETECTOR_YOLOV3_WF_CONFIG_URL##*/}"
-    detector_config="${detector_config_dir}/${detector_config_filename}"
-    if [ ! -f ${detector_config} ]; then
-      echo "Downloading ${detector_config}..."
-      python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${DETECTOR_YOLOV3_WF_CONFIG_URL} --dest ${detector_config_dir}
-    fi
-
     detector_weights_filename="${DETECTOR_YOLOV3_WF_WEIGHTS_URL##*/}"
-    detector_weights="${detector_config_dir}/${detector_weights_filename}"
-    if [ ! -f ${detector_weights} ]; then
-      echo "Downloading ${detector_weights}..."
-      python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${DETECTOR_YOLOV3_WF_WEIGHTS_URL} --dest ${detector_config_dir}
-    fi
+    detector_type="yolov3"
+elif [ "v${DETECTOR}" == "vwfyolov4" ]; then
+    detector_config_filename="${DETECTOR_YOLOV4_WF_CONFIG_URL##*/}"
+    detector_weights_filename="${DETECTOR_YOLOV4_WF_WEIGHTS_URL##*/}"
+    detector_type="yolov4"
 else
     echo "Invalid detector"
     exit 1
+fi
+
+detector_config="${detector_config_dir}/${detector_config_filename}"
+detector_weights="${detector_config_dir}/${detector_weights_filename}"
+
+if [ ! -f ${detector_config} ]; then
+   echo "Downloading ${detector_config}..."
+   python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${DETECTOR_YOLOV3_WF_CONFIG_URL} --dest ${detector_config_dir}
+fi
+if [ ! -f ${detector_weights} ]; then
+   echo "Downloading ${detector_weights}..."
+   python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${DETECTOR_YOLOV3_WF_WEIGHTS_URL} --dest ${detector_config_dir}
 fi
 
 pretrained_dir="/build/AlphaPose/pretrained_models"
