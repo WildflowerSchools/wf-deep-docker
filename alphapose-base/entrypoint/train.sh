@@ -12,7 +12,7 @@ function load_assets {
   detector_type=${G_DETECTOR_TYPE}
 
   download_pose_model ${PRETRAINED}
-  pretrained=${G_POSE_MODEL}
+  pretrained=${G_POSE_MODEL_WEIGHTS}
 }
 
 function validate {
@@ -66,7 +66,10 @@ function validate {
 }
 
 function reset_training_config {
-  alphapose_cfg_path="/build/AlphaPose/data/cfgs/wf_alphapose_config.yaml"
+  alphapose_cfg_dir="/build/AlphaPose/data/pose_cfgs"
+  mkdir -p ${alphapose_cfg_dir}
+  
+  alphapose_cfg_path="${alphapose_cfg_dir}/wf_alphapose_config.yaml"
   cp /build/AlphaPose/configs/wf/train_template.yaml ${alphapose_cfg_path}
 }
 

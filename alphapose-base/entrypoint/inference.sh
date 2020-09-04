@@ -9,7 +9,8 @@ function load_assets {
   detector_type=${G_DETECTOR_TYPE}
 
   download_pose_model ${POSE_MODEL}
-  pose_model=${G_POSE_MODEL}
+  pose_model_weights=${G_POSE_MODEL_WEIGHTS}
+  pose_model_config=${G_POSE_MODEL_CONFIG}
 
   download_tracker_model ${TRACKER_MODEL}
   tracker_model=${G_TRACKER_MODEL}
@@ -31,8 +32,13 @@ function validate {
       exit 1
   fi
 
-  if [ ! -f "${pose_model}" ]; then
-      echo "Pose model '${pose_model}' does not exist"
+  if [ ! -f "${pose_model_weights}" ]; then
+      echo "Pose model weights '${pose_model_weights}' does not exist"
+      exit 1
+  fi
+
+  if [ ! -f "${pose_model_config}" ]; then
+      echo "Pose model config '${pose_model_config}' does not exist"
       exit 1
   fi
 
@@ -42,9 +48,24 @@ function validate {
   fi
 }
 
-function inference {
-  clear_det_results
+function stage_inference_config {
+  alphapose_cfg_dir="/build/AlphaPose/data/pose_cfgs"
+  mkdir -p ${alphapose_cfg_dir}
 
+  alphapose_cfg_path="${alphapose_cfg_dir}/wf_alphapose_inference_config.yaml"
+  cp ${pose_model_config} ${alphapose_cfg_path}
+}
+
+function prepare_config {
+  stage_inference_config
+
+  # Hoping these attributes are never reused...
+  sed -i -E "s/.*NAME:.*/${DETECTOR}/g" "${alphapose_cfg_path}"
+  sed -i -E "s/.*CONFIG:.*/$(regex_safe ${detector_config})/g" "${alphapose_cfg_path}"
+  sed -i -E "s/.*WEIGHTS:.*/$(regex_safe ${detector_weights})/g" "${alphapose_cfg_path}"
+}
+
+function inference {
   python3 scripts/demo_inference.py --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${pose_model}
 }
 
@@ -94,5 +115,6 @@ done
 
 load_assets
 validate
+prepare_config
 inference
 

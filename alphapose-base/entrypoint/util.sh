@@ -22,8 +22,10 @@ function download_detector {
   G_DETECTOR_WEIGHTS=""
   G_DETECTOR_TYPE=""
   
-  local detector_config_dir="/build/AlphaPose/data/cfgs"
-  local detector_weights_dir="/build/AlphaPose/data/weights"
+  local detector_config_dir="/build/AlphaPose/data/detector_cfgs"
+  local detector_weights_dir="/build/AlphaPose/data/detector_weights"
+  mkdir -p ${detector_config_dir}
+  mkdir -p ${detector_weights_dir}
 
   local detector_config_url=""
   local detector_weights_url=""
@@ -54,7 +56,7 @@ function download_detector {
       detector_type="yolov4"
   elif [ "v${detector_type}" == "vwfyolov4" ]; then
       detector_config_url="${DETECTOR_YOLOV4_WF_CONFIG_URL}"
-      detector_weights_url="${DETECTOR_YOLOV4_WF_CONFIG_URL}"
+      detector_weights_url="${DETECTOR_YOLOV4_WF_WEIGHTS_URL}"
     
       detector_config_filename="${DETECTOR_YOLOV4_WF_CONFIG_URL##*/}"
       detector_weights_filename="${DETECTOR_YOLOV4_WF_WEIGHTS_URL##*/}"
@@ -65,14 +67,14 @@ function download_detector {
   fi
 
   local detector_config="${detector_config_dir}/${detector_config_filename}"
-  local detector_weights="${detector_config_dir}/${detector_weights_filename}"
   if [ "v${detector_config_url}" != "v" ] && [ ! -f ${detector_config} ]; then
       echo "Downloading ${detector_config}..."
       python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${detector_config_url} --dest ${detector_config_dir}
   fi
+  local detector_weights="${detector_weights_dir}/${detector_weights_filename}"
   if [ "v${detector_weights_url}" != "v" ]  && [ ! -f ${detector_weights} ]; then
       echo "Downloading ${detector_weights}..."
-      python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${detector_weights_url} --dest ${detector_config_dir}
+      python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${detector_weights_url} --dest ${detector_weights_dir}
   fi
 
   G_DETECTOR_CONFIG=${detector_config}
@@ -87,34 +89,57 @@ function download_detector {
 # Params:
 #   $1: pose_model (string) - fast_421_res152_256x192 | wf_res152_256x192 | wf_res152_256x192_yolov4
 # Sets:
-#   G_POSE_MODEL (string) - absolute path to the pose model file
+#   G_POSE_MODEL_WEIGHTS (string) - absolute path to the pose model file
+#   G_POSE_MODEL_CONFIG (string) - absolute path to the pose config file
 function download_pose_model {
   local pose_model=$1
 
-  G_POSE_MODEL=""
-  
+  G_POSE_MODEL_WEIGHTS="" 
+  G_POSE_MODEL_CONFIG=""
+
   local pretrained_dir="/build/AlphaPose/pretrained_models"
+  mkdir -p ${pretrained_dir}
+
   local model_path=""
-  local pose_model_url=""
+  local pose_model_weights_url=""
+  local pose_model_config_url=""
   if [ "v${pose_model}" == "vfast_421_res152_256x192" ]; then
-    pose_model_url="${PRETRAINED_FAST_421_RES152_256x192_URL}"
+    pose_model_weights_url="${PRETRAINED_FAST_421_RES152_256x192_WEIGHTS_URL}"
+    pose_model_config_path="${PRETRAINED_FAST_421_RES152_256x192_CONFIG_PATH}"
   elif [ "v${pose_model}" == "vwf_res152_256x192" ]; then
-    pose_model_url="${POSE_MODEL_RES152_256x192_WF_URL}"
+    pose_model_weights_url="${POSE_MODEL_RES152_256x192_WF_WEIGHTS_URL}"
+    pose_model_config_url="${POSE_MODEL_RES152_256x192_WF_CONFIG_URL}"
   elif [ "v${pose_model}" == "vwf_res152_256x192_yolov4" ]; then
-    pose_model_url="${POSE_MODEL_RES152_256x192_WF_YOLOV4_URL}"
+    pose_model_weights_url="${POSE_MODEL_RES152_256x192_WF_YOLOV4_WEIGHTS_URL}"
+    pose_model_config_url="${POSE_MODEL_RES152_256x192_WF_YOLOV4_CONFIG_URL}"
   elif [ "v${pose_model}" != "v" ]; then
-    echo "Invalid pretrained"
+    echo "Invalid pose model ${pose_model}"
     exit 1
   fi
 
-  pose_model_filename="${pose_model_url##*/}"
-  model_path="${pretrained_dir}/${pose_model_filename}"
-  if [ ! -f ${model_path} ]; then
-    echo "Downloading ${pose_model_url}..."
-    python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${pose_model_url} --dest ${pretrained_dir}
+  local pose_model_weights_filename="${pose_model_weights_url##*/}"
+  local model_weights_path="${pretrained_dir}/${pose_model_weights_filename}"
+  if [ "v${model_weights_path}" != "v" ] && [ ! -f ${model_weights_path} ]; then
+    echo "Downloading ${pose_model_weights_url}..."
+    python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${pose_model_weights_url} --dest ${pretrained_dir}
   fi
 
-  G_POSE_MODEL="${model_path}"
+  local pose_model_config_filename=""
+  local model_config_path=""
+  if [ "v${pose_model_config_path}" != "v" ]; then
+    pose_model_config_filename="${pose_model_config_path##*/}"
+    model_config_path="#{pose_model_config_path}"
+  else 
+    pose_model_config_filename="${pose_model_config_url##*/}"
+    model_config_path="${pretrained_dir}/${pose_model_config_filename}"
+    if [ "v${model_config_path}" != "v" ] && [ ! -f ${model_config_path} ]; then
+      echo "Downloading ${pose_model_config_url}..."
+      python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${pose_model_config_url} --dest ${pretrained_dir}
+    fi
+  fi
+
+  G_POSE_MODEL_WEIGHTS="${model_weights_path}"
+  G_POSE_MODEL_CONFIG="${model_config_path}"
 }
 
 
@@ -130,21 +155,22 @@ function download_tracker_model {
 
   G_TRACKER_MODEL=""
   
-  local pretrained_dir="/build/AlphaPose/pretrained_models"
-  local model_path=""
+  local tracker_dir="/build/AlphaPose/data/tracker_weights"
+  mkdir -p ${tracker_dir}
+
   local tracker_model_url=""
   if [ "v${tracker_model}" == "jde_1088x608" ]; then
     tracker_model_url="${TRACKER_JDE_1088x608_URL}"
   elif [ "v${tracker_model}" != "v" ]; then
-    echo "Invalid pretrained"
+    echo "Invalid tracker model ${tracker_model}"
     exit 1
   fi
 
-  tracker_model_filename="${tracker_model_url##*/}"
-  model_path="${pretrained_dir}/${tracker_model_filename}"
+  local tracker_model_filename="${tracker_model_url##*/}"
+  local model_path="${tracker_dir}/${tracker_model_filename}"
   if [ ! -f ${model_path} ]; then
     echo "Downloading ${tracker_model_url}..."
-    python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${tracker_model_url} --dest ${pretrained_dir}
+    python3 /build/AlphaPose/scripts/s3_download.py --s3-file-url ${tracker_model_url} --dest ${tracker_dir}
   fi
 
   G_TRACKER_MODEL="${model_path}"
@@ -165,6 +191,7 @@ function download_training_data {
   
   local dataset_dir="/build/AlphaPose/data/wf-coco"
   mkdir -p ${dataset_dir}
+
   if [ "v${DATASET_URL}" != "v" ]; then
       local dataset_compressed_filename="${DATASET_URL##*/}"
       local dataset_compressed_file="${dataset_dir}/${dataset_compressed_filename}"
