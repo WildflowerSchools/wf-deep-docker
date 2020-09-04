@@ -1,20 +1,24 @@
-FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v2
+FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v3
+
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
 RUN apt update && \
-        apt install -y build-essential \
-        libssl-dev \
-        python3-dev \
-        libyaml-dev \
-        git && \
-    pip3 install --upgrade pip setuptools build-utils
+    DEBIAN_FRONTEND=noninteractive apt install -y libsm-dev libgl1-mesa-glx 
 
-RUN DEBIAN_FRONTEND=noninteractive apt install -y python3-matplotlib python-libsmdev libsm-dev
+RUN cd /build && git clone https://github.com/WildflowerSchools/AlphaPose.git
 
-RUN pip3 install Cython
+WORKDIR /build/AlphaPose
 
-RUN cd /build && git clone https://github.com/WildflowerSchools/AlphaPose.git && cd /build/AlphaPose && git checkout poseflow-problems
+RUN python3 setup.py build develop --user && \
+    pip uninstall pycocotools -y
 
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3
+# Prep work for entrypoint.sh
+RUN apt install bc -y && \
+    pip3 install boto3 && \
+    python3 -c "import torchvision.models as tm; tm.resnet152(pretrained=True)"
 
-RUN pip3 install --upgrade keyrings.alt 
+COPY scripts/s3_download.py alphapose-base/evaluate.sh alphapose-base/evaluate.py scripts/
+COPY alphapose-base/entrypoint/*.sh /usr/local/bin/
+ENV PATH=/usr/local/bin:${PATH}
 
+ENTRYPOINT ["entrypoint.sh"]

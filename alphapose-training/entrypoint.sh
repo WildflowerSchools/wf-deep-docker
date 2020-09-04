@@ -16,6 +16,8 @@ DETECTOR_YOLOV4_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov4-spp.w
 
 PRETRAINED_FAST_421_RES152_256x192="s3://wildflower-tech-public/models/alphapose/fast_421_res152_256x192.pth"
 
+TRACKER_JDE_WEIGHTS_URL="https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/jde.1088x608.uncertainty.pt"
+
 function regexSafe {
   echo "$(<<< "$1" sed -e 's`[][\\/.*^$]`\\&`g')"
 }
