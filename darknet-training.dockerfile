@@ -5,11 +5,7 @@ RUN apt install python3-venv -y && \
 
 WORKDIR /build/darknet
 
-RUN sed -i 's/GPU=0/GPU=1/g' Makefile && \
-    sed -i 's/CUDNN=0/CUDNN=1/g' Makefile && \
-    sed -i 's/CUDNN_HALF=0/CUDNN_HALF=1/g' Makefile && \
-    sed -i 's/OPENCV=0/OPENCV=1/g' Makefile && \
-    make
+RUN make GPU=1 CUDNN=1 CUDNN_HALF=1 OPENCV=1
 
 RUN wget https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/yolov3-spp.weights && \
     wget https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/yolov4.weights && \
