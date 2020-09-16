@@ -1,25 +1,33 @@
 FROM nvidia/cuda:10.2-devel-ubuntu18.04
 
 RUN apt update && \
-    apt install -y python3 python3-pip git 
+    apt-get install software-properties-common -y && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt update && \
+    apt install -y git python3.8-dev build-essential
 
-RUN mkdir /build
+ENV PYTORCH_VERSION 1.6.0
+ENV PYTORCH_BUILD_VERSION="${PYTORCH_VERSION}"
+ENV PYTORCH_BUILD_NUMBER=1
 
-RUN cd /build && git clone --recursive https://github.com/pytorch/pytorch
+RUN mkdir /build && \
+    cd /build && git clone --recursive --depth 1 --branch v${PYTORCH_VERSION} https://github.com/pytorch/pytorch && \
+    cd /build/pytorch && git submodule sync && git submodule update --init --recursive
 
-RUN cd /build/pytorch && git submodule sync && git submodule update --init --recursive
+RUN apt install -y curl && \
+    curl "https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh" > /build/conda-install.sh && \
+    bash /build/conda-install.sh -b -p /anaconda && \
+    /anaconda/bin/conda install numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing -y
 
-RUN apt install -y curl
+ENV PATH="/anaconda/bin:${PATH}"
 
-RUN curl "https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh" > /build/conda-install.sh
+# Switch to Anaconda Python
+RUN ln -s /anaconda/bin/python /usr/bin/python && \
+    rm /usr/bin/python3 && ln -s /anaconda/bin/python3 /usr/bin/python3 && \
+    ln -s /usr/share/pyshared/lsb_release.py /anaconda/lib/python3.8/site-packages/lsb_release.py
 
-RUN bash /build/conda-install.sh -b -p /anaconda
-
-RUN /anaconda/bin/conda install numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing
-
-RUN pip3 install pyyaml numpy
-
-RUN apt install -y build-essential cmake
-
-RUN cd /build/pytorch && export CMAKE_PREFIX_PATH=/anaconda && python3 setup.py install
-
+RUN cd /build/pytorch && \
+    PATH=/anaconda/bin:$PATH && \
+    TORCH_NVCC_FLAGS="-D__CUDA_NO_HALF_OPERATORS__" && \
+    CMAKE_PREFIX_PATH=/anaconda && \
+    python setup.py install 

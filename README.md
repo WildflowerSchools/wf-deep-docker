@@ -9,12 +9,11 @@ A base image that includes CUDA that have pytorch installed on it
 
 ## alphapose-base
 
-A base image that extends `pytorch-base` adding the AlphaPose library. Building this image requires the GPU to be enabled. At this time we do a standard docker build and then run the image.
+A base image that extends `pytorch-base` adding the AlphaPose library. At this time we do a standard docker build and then run the image.
 
-Once inside the image you execute the following to build and install AlphaPose:
+The Alphapose image uses an entrypoint script that can run inference or training:
 
-```cd /build/AlphaPose && export PATH=/usr/local/cuda-10.2/bin:$PATH && \
-    export LD_LIBRARY_PATH=/usr/local/cuda/lib64:LD_LIBRARY_PATH && \
-    python3 setup.py build develop --user
-```
+`entrypoint.sh train {FLAGS}`
+`entrypoint.sh inference {FLAGS}`
 
+These are custom scripts that execute the underlying Alphapose train.py and inference.py executables. Our scripts prepare the environment by downloading required files and modifying runtime configs.
