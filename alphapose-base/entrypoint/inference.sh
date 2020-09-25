@@ -60,13 +60,13 @@ function prepare_config {
   stage_inference_config
 
   # Hoping these attributes are never reused...
-  sed -i -E "s/.*NAME:.*/${DETECTOR}/g" "${alphapose_cfg_path}"
-  sed -i -E "s/.*CONFIG:.*/$(regex_safe ${detector_config})/g" "${alphapose_cfg_path}"
-  sed -i -E "s/.*WEIGHTS:.*/$(regex_safe ${detector_weights})/g" "${alphapose_cfg_path}"
+  sed -i -E "s/.*NAME:.*/  NAME: ${DETECTOR}/g" "${alphapose_cfg_path}"
+  sed -i -E "s/.*CONFIG:.*/  CONFIG: $(regex_safe ${detector_config})/g" "${alphapose_cfg_path}"
+  sed -i -E "s/.*WEIGHTS:.*/  WEIGHTS: $(regex_safe ${detector_weights})/g" "${alphapose_cfg_path}"
 }
 
 function inference {
-  python3 scripts/demo_inference.py --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${pose_model}
+  python3 scripts/demo_inference.py --detector "${detector_type}" --cfg "${alphapose_cfg_path}" --checkpoint "${pose_model_weights}"
 }
 
 PARAMS=""
