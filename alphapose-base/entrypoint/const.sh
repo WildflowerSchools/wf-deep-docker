@@ -15,15 +15,14 @@ DETECTOR_YOLOV4_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/yolov4.wf.0.
 PRETRAINED_FAST_421_RES152_256x192_CONFIG_PATH="/build/Alphapose/configs/coco/resnet/256x192_res152_lr1e-3_1x-duc.yaml"
 PRETRAINED_FAST_421_RES152_256x192_WEIGHTS_URL="s3://wildflower-tech-public/models/alphapose/fast_421_res152_256x192.pth"
 
-POSE_MODEL_RES152_256x192_WF_CONFIG_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192-0.1-08232020.yaml"
-POSE_MODEL_RES152_256x192_WF_WEIGHTS_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192-0.1-08232020.pth"
+POSE_MODEL_RES152_256x192_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192-0.1-08232020.yaml"
+POSE_MODEL_RES152_256x192_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192-0.1-08232020.pth"
 
-POSE_MODEL_RES152_256x192_WF_CONFIG_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192-0.1-08232020.yaml"
-POSE_MODEL_RES152_256x192_WF_WEIGHTS_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192-0.1-08232020.pth"
+POSE_MODEL_RES152_256x192_WF_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192-0.1-08232020.yaml"
+POSE_MODEL_RES152_256x192_WF_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192-0.1-08232020.pth"
 
-POSE_MODEL_RES152_256x192_WF_YOLOV4_CONFIG_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192.0.2.yolov4.yaml"
-POSE_MODEL_RES152_256x192_WF_YOLOV4_WEIGHTS_URL="https://wf-sagemaker-us-east-2.s3.us-east-2.amazonaws.com/weights/alphapose-wf_res152_256x192.0.2.yolov4.pth"
+POSE_MODEL_RES152_256x192_WF_YOLOV4_CONFIG_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192.0.2.yolov4.yaml"
+POSE_MODEL_RES152_256x192_WF_YOLOV4_WEIGHTS_URL="s3://wf-sagemaker-us-east-2/weights/alphapose-wf_res152_256x192.0.2.yolov4.pth"
 
 
-TRACKER_JDE_1088x608_URL="https://wildflower-tech-public.s3.us-east-2.amazonaws.com/models/alphapose/jde.1088x608.uncertainty.pt"
-
+TRACKER_JDE_1088x608_URL="s3://wildflower-tech-public/models/alphapose/jde.1088x608.uncertainty.pt"

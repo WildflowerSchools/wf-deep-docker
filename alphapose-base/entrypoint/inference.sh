@@ -2,6 +2,17 @@
 
 source util.sh
 
+
+REDIS="redis-cli -h localhost"
+PARAMS=""
+declare -A KWARGS
+
+DETECTOR="wfyolov3"
+POSE_MODEL=""
+TRACKER_MODEL=""
+CMD="python3 scripts/demo_inference.py"
+
+
 function load_assets {
   download_detector ${DETECTOR}
   detector_config=${G_DETECTOR_CONFIG}
@@ -66,13 +77,90 @@ function prepare_config {
 }
 
 function inference {
-  python3 scripts/demo_inference.py --detector "${detector_type}" --cfg "${alphapose_cfg_path}" --checkpoint "${pose_model_weights}"
+  ARGS=""
+  for KEY in "${!KWARGS[@]}"; do
+    ARGS="$ARGS --$KEY ${KWARGS[$KEY]}"
+  done
+  environment_id=${KWARGS["environment_id"]:?"environment_id is required"}
+  assignment_id=${KWARGS["assignment_id"]:?"assignment_id is required"}
+  start_date=${KWARGS["start"]}  # 2020-03-10T00:00:00+0000
+  duration=${KWARGS["dur"]:-"1d"}
+  slot=${KWARGS["slot"]}
+  state_id=$(producer hash $start_date $duration)
+  date="${start_date: 0:4}/${start_date: 5:2}/${start_date: 8:2}"
+  available_gpus=$($REDIS lrange "airflow.gpu.slots.available" 0 $($REDIS llen "airflow.gpu.slots.available"))
+
+  echo $available_gpus
+
+  if [ ${KWARGS["verbose"]} = "true" ]; then
+      echo "available_gpus:: $available_gpus"
+      echo "environment_id:: $environment_id"
+      echo "assignment_id:: $assignment_id"
+  fi
+
+  function log_verbose() {
+      if [ ${KWARGS["verbose"]} = "true" ]; then
+          echo $1
+      fi
+  }
+
+  start=`date +%s`
+
+  if [ -d /data/prepared/$environment_id/$assignment_id/$date/ ]
+  then
+      log_verbose /data/prepared/$environment_id/$assignment_id/$state_id.$slot.json
+      for f in $(cat /data/prepared/$environment_id/$assignment_id/$state_id.$slot.json | jq -r '.[].video')
+      do
+          if [ ! -d /data/prepared/$environment_id/$assignment_id/$date/${f: -12:-4}/*.json ]; then
+              echo "allocating GPU"
+              selected_gpu=""
+              iterations=0
+              while [[ "$selected_gpu" -eq "" ]]
+              do
+                  for gpu in $available_gpus
+                  do
+                      key="airflow.gpu.slots.$gpu"
+                      aquired=$($REDIS setnx $key holding)
+                      if [ $aquired -eq 1 ]; then
+                          selected_gpu=$gpu
+                          break 2
+                      fi
+                  done
+                  if [[ ! "$selected_gpu" == "" ]]; then
+                      break
+                  fi
+                  iterations=$(( iterations++ ))
+                  if [ $iterations -gt 69 ]
+                  then
+                      exit 22
+                  fi
+                  sleep 1
+              done
+              if [[ ! "$selected_gpu" == "" ]]; then
+                  echo "GPU aquired - executing inference $selected_gpu"
+
+                  ${CMD} --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${POSE_MODEL} --sp --video ${f} --gpus ${selected_gpu}
+
+                  key="airflow.gpu.slots.$selected_gpu"
+                  free=$($REDIS del $key)
+              fi
+          fi
+      done
+  else
+      echo "nothing to do"
+  fi
+
+  date
+
+  end=`date +%s`
+  runtime=$((end-start))
+
+  if [ ${KWARGS["verbose"]} = "true" ]; then
+      echo "runtime:: $runtime"
+  fi
+
 }
 
-PARAMS=""
-DETECTOR="wfyolov3"
-POSE_MODEL=""
-TRACKER_MODEL=""
 while (( "$#" )); do
   case "$1" in
     --detector)
@@ -102,9 +190,24 @@ while (( "$#" )); do
        	exit 1
       fi
       ;;
+    --inference-command)
+        if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+          CMD=$2
+          shift 2
+        else
+          echo "Error: Argument for $1 is missing" >&2
+         	exit 1
+        fi
+        ;;
     -*|--*=) # unsupported flags
-      echo "Error: Unsupported flag $1" >&2
-      exit 1
+      KEY=${1##*-}
+      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+         KWARGS["$KEY"]="$2"
+         shift 2
+      else
+         KWARGS["$KEY"]="true"
+            shift 1
+     fi
       ;;
     *) # preserve positional arguments
       PARAMS="$PARAMS $1"
@@ -113,8 +216,8 @@ while (( "$#" )); do
   esac
 done
 
+
 load_assets
 validate
 prepare_config
 inference
-

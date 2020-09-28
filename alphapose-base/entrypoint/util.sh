@@ -10,7 +10,7 @@ function regex_safe {
 # Sets global variables with paths to config and weight files.
 #
 # Params:
-#   $1: detector_type (string) - yolov3 | yolov4 | wfyolov3 | wfyolov4 
+#   $1: detector_type (string) - yolov3 | yolov4 | wfyolov3 | wfyolov4
 # Sets:
 #   G_DETECTOR_CONFIG (string) - absolute path to the detector config file
 #   G_DETECTOR_WEIGHTS (string) - absolute path to the detector weights file
@@ -21,7 +21,7 @@ function download_detector {
   G_DETECTOR_CONFIG=""
   G_DETECTOR_WEIGHTS=""
   G_DETECTOR_TYPE=""
-  
+
   local detector_config_dir="/build/AlphaPose/data/detector_cfgs"
   local detector_weights_dir="/build/AlphaPose/data/detector_weights"
   mkdir -p ${detector_config_dir}
@@ -34,30 +34,30 @@ function download_detector {
 
   if [ "v${detector_type}" == "vyolov3" ]; then
       detector_weights_url="${DETECTOR_YOLOV3_DARKNET_WEIGHTS_URL}"
-      
+
       detector_config_filename="${DETECTOR_YOLOV3_DARKNET_CONFIG_PATH}"
       detector_weights_filename="${DETECTOR_YOLOV3_DARKNET_WEIGHTS_URL##*/}"
-      
+
       detector_type="yolov3"
   elif [ "v${detector_type}" == "vwfyolov3" ]; then
       detector_config_url="${DETECTOR_YOLOV3_WF_CONFIG_URL}"
       detector_weights_url="${DETECTOR_YOLOV3_WF_WEIGHTS_URL}"
-      
+
       detector_config_filename="${DETECTOR_YOLOV3_WF_CONFIG_URL##*/}"
       detector_weights_filename="${DETECTOR_YOLOV3_WF_WEIGHTS_URL##*/}"
-      
+
       detector_type="yolov3"
   elif [ "v${detector_type}" == "vyolov4" ]; then
       detector_weights_url="${DETECTOR_YOLOV4_DARKNET_WEIGHTS_URL}"
-      
+
       detector_config_filename="${DETECTOR_YOLOV4_DARKNET_CONFIG_PATH}"
       detector_weights_filename="${DETECTOR_YOLOV4_DARKNET_WEIGHTS_URL##*/}"
-      
+
       detector_type="yolov4"
   elif [ "v${detector_type}" == "vwfyolov4" ]; then
       detector_config_url="${DETECTOR_YOLOV4_WF_CONFIG_URL}"
       detector_weights_url="${DETECTOR_YOLOV4_WF_WEIGHTS_URL}"
-    
+
       detector_config_filename="${DETECTOR_YOLOV4_WF_CONFIG_URL##*/}"
       detector_weights_filename="${DETECTOR_YOLOV4_WF_WEIGHTS_URL##*/}"
       detector_type="yolov4"
@@ -94,7 +94,7 @@ function download_detector {
 function download_pose_model {
   local pose_model=$1
 
-  G_POSE_MODEL_WEIGHTS="" 
+  G_POSE_MODEL_WEIGHTS=""
   G_POSE_MODEL_CONFIG=""
 
   local pretrained_dir="/build/AlphaPose/pretrained_models"
@@ -129,7 +129,7 @@ function download_pose_model {
   if [ "v${pose_model_config_path}" != "v" ]; then
     pose_model_config_filename="${pose_model_config_path##*/}"
     model_config_path="#{pose_model_config_path}"
-  else 
+  else
     pose_model_config_filename="${pose_model_config_url##*/}"
     model_config_path="${pretrained_dir}/${pose_model_config_filename}"
     if [ "v${model_config_path}" != "v" ] && [ ! -f ${model_config_path} ]; then
@@ -154,7 +154,7 @@ function download_tracker_model {
   local tracker_model=$1
 
   G_TRACKER_MODEL=""
-  
+
   local tracker_dir="/build/AlphaPose/data/tracker_weights"
   mkdir -p ${tracker_dir}
 
@@ -188,7 +188,7 @@ function download_training_data {
   local dataset_url=$1
 
   G_DATASET_DIR=""
-  
+
   local dataset_dir="/build/AlphaPose/data/wf-coco"
   mkdir -p ${dataset_dir}
 
