@@ -92,14 +92,17 @@ function inference {
 
   echo $available_gpus
 
-  if [ ${KWARGS["verbose"]} = "true" ]; then
+  if [[ ${KWARGS["verbose"]} == "true" ]]; then
       echo "available_gpus:: $available_gpus"
       echo "environment_id:: $environment_id"
       echo "assignment_id:: $assignment_id"
+      echo "date:: $date"
+      echo "state_id:: $state_id"
+      echo "slot:: $slot"
   fi
 
   function log_verbose() {
-      if [ ${KWARGS["verbose"]} = "true" ]; then
+      if [[ ${KWARGS["verbose"]} == "true" ]]; then
           echo $1
       fi
   }
@@ -114,6 +117,8 @@ function inference {
           if [ ! -d /data/prepared/$environment_id/$assignment_id/$date/${f: -12:-4}/*.json ]; then
               echo "allocating GPU"
               selected_gpu=""
+              outdir=/data/prepared/$environment_id/$assignment_id/$date/${f: -12:-4}/
+              mkdir -p $outdir
               iterations=0
               while [[ "$selected_gpu" -eq "" ]]
               do
@@ -137,12 +142,12 @@ function inference {
                   sleep 1
               done
               if [[ ! "$selected_gpu" == "" ]]; then
+                  set +e
                   echo "GPU aquired - executing inference $selected_gpu"
-
-                  ${CMD} --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${POSE_MODEL} --sp --video ${f} --gpus ${selected_gpu}
-
                   key="airflow.gpu.slots.$selected_gpu"
-                  free=$($REDIS del $key)
+                  GPU=$selected_gpu ${CMD} --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${pose_model_weights} --sp --video ${f} --gpus ${selected_gpu} --outdir ${outdir}
+                  $REDIS del $key
+                  set -e
               fi
           fi
       done
@@ -155,10 +160,9 @@ function inference {
   end=`date +%s`
   runtime=$((end-start))
 
-  if [ ${KWARGS["verbose"]} = "true" ]; then
+  if [[ ${KWARGS["verbose"]} == "true" ]]; then
       echo "runtime:: $runtime"
   fi
-
 }
 
 while (( "$#" )); do

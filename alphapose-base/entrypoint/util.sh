@@ -159,7 +159,7 @@ function download_tracker_model {
   mkdir -p ${tracker_dir}
 
   local tracker_model_url=""
-  if [ "v${tracker_model}" == "vjde_1088x608" ]; then
+  if [ "${tracker_model}" == "jde_1088x608" ]; then
     tracker_model_url="${TRACKER_JDE_1088x608_URL}"
   elif [ "v${tracker_model}" != "v" ]; then
     echo "Invalid tracker model ${tracker_model}"
