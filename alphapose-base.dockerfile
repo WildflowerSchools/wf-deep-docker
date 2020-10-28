@@ -1,4 +1,4 @@
-FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v3
+FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v4
 
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
