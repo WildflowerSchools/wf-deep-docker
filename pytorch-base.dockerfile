@@ -6,7 +6,7 @@ RUN apt update && \
     apt update && \
     apt install -y git python3.8-dev build-essential
 
-ENV PYTORCH_VERSION 1.6.0
+ENV PYTORCH_VERSION 1.7.0
 ENV PYTORCH_BUILD_VERSION="${PYTORCH_VERSION}"
 ENV PYTORCH_BUILD_NUMBER=1
 
