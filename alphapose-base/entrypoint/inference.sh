@@ -145,7 +145,7 @@ function inference {
                   set +e
                   echo "GPU aquired - executing inference $selected_gpu"
                   key="airflow.gpu.slots.$selected_gpu"
-                  GPU=$selected_gpu ${CMD} --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${pose_model_weights} --sp --video ${f} --gpus ${selected_gpu} --outdir ${outdir}
+                  GPU=$selected_gpu ${CMD} --detector ${detector_type} --cfg ${alphapose_cfg_path} --checkpoint ${pose_model_weights} --sp --video ${f} --gpus ${selected_gpu} --outdir ${outdir} --format coco
                   $REDIS del $key
                   set -e
               fi
