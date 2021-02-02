@@ -6,16 +6,18 @@ RUN apt update && \
     apt update && \
     apt install -y git python3.8-dev build-essential
 
-ENV PYTORCH_VERSION 1.7.0
+ENV PYTORCH_VERSION 1.6.0
 ENV PYTORCH_BUILD_VERSION="${PYTORCH_VERSION}"
 ENV PYTORCH_BUILD_NUMBER=1
+ENV TORCH_CUDA_ARCH_LIST="6.1;7.5"
 
 RUN mkdir /build && \
     cd /build && git clone --recursive --depth 1 --branch v${PYTORCH_VERSION} https://github.com/pytorch/pytorch && \
     cd /build/pytorch && git submodule sync && git submodule update --init --recursive
 
-RUN apt install -y curl && \
-    curl "https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh" > /build/conda-install.sh && \
+
+RUN apt update && apt install -y libcurl4 curl
+RUN  curl "https://repo.anaconda.com/archive/Anaconda3-2020.07-Linux-x86_64.sh" > /build/conda-install.sh && \
     bash /build/conda-install.sh -b -p /anaconda && \
     /anaconda/bin/conda install numpy ninja pyyaml mkl mkl-include setuptools cmake cffi typing -y
 

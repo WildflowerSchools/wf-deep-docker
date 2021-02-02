@@ -1,13 +1,15 @@
-FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch-base-v4
+FROM wildflowerschools/wf-deep-docker:cuda10.2-pytorch1.6-base-v1
 
 ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
 
 RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt install -y libsm-dev libgl1-mesa-glx 
+    DEBIAN_FRONTEND=noninteractive apt install -y libsm-dev libgl1-mesa-glx
 
 RUN cd /build && git clone https://github.com/WildflowerSchools/AlphaPose.git
 
 WORKDIR /build/AlphaPose
+
+RUN pip3 install torchvision==0.7.0
 
 RUN python3 setup.py build develop --user && \
     pip uninstall pycocotools -y
